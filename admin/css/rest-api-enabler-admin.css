@@ -1,0 +1,17 @@
+/**
+ * All of the CSS for your dashboard-specific functionality should be
+ * included in this file.
+ */
+
+.rae-rest-base {
+	-webkit-transition: all .25s ease;
+	   -moz-transition: all .25s ease;
+	    -ms-transition: all .25s ease;
+	     -o-transition: all .25s ease;
+	        transition: all .25s ease;
+}
+
+.rae-hidden-opacity {
+	opacity: 0;
+	filter: alpha(opacity=0);
+}

@@ -1,0 +1,22 @@
+{
+  "title": "REST API Enabler",
+  "description": "Enable REST API endpoints for custom post types, custom fields, and taxonomies.",
+  "version": "1.0.0",
+  "homepage": "http://wordpress.org/plugins/rest-api-enabler",
+  "author": {
+    "name": "Mickey Kay Creative",
+    "email": "mickey@mickeykaycreative.com",
+    "url": "http://mickeykaycreative.com"
+  },
+  "devDependencies": {
+    "grunt": "latest",
+    "load-grunt-tasks": "latest",
+    "grunt-dev-update": "latest",
+    "grunt-prompt": "latest",
+    "grunt-text-replace": "latest",
+    "grunt-wp-readme-to-markdown": "latest",
+    "grunt-wp-i18n": "latest",
+    "grunt-contrib-copy": "^0.7.0"
+  },
+  "keywords": []
+}
