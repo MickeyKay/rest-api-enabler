@@ -129,7 +129,7 @@ class REST_API_Enabler {
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->define_admin_hooks();
-		$this->define_public_hooks();
+		//$this->define_public_hooks();
 		$this->define_shared_hooks();
 
 	}
@@ -173,7 +173,7 @@ class REST_API_Enabler {
 		 * The class responsible for defining all actions that occur in the public-facing
 		 * side of the site.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-rest-api-enabler-public.php';
+		// require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-rest-api-enabler-public.php';
 
 		$this->loader = new REST_API_Enabler_Loader();
 
@@ -244,7 +244,8 @@ class REST_API_Enabler {
 
 		$plugin_shared = $this;
 
-		// Define actions that are shared by both the public and admin.
+		// Enable REST API support for post types.
+		$this->loader->add_action( 'init', $plugin_shared, 'add_rest_api_support', 15 );
 
 	}
 
@@ -275,6 +276,64 @@ class REST_API_Enabler {
 	 */
 	public function get( $property = '' ) {
 		return $this->$property;
+	}
+
+	/**
+	 * Add custom REST API support to specificed post types.
+	 *
+	 * @since 1.0.0
+	 */
+	public function add_rest_api_support() {
+
+		global $wp_post_types;
+
+		// Loop over each post type, register support for the API, and add the response filter.
+		foreach ( $wp_post_types as $post_type_slug => $post_type_object ) {
+
+			// If no option has been explicitly saved for this post type, then skip it and maintain the defaults.
+			if ( ! isset( $this->options["post_type_{$post_type_slug}"]['show_in_rest'] ) ) {
+				continue;
+			}
+
+			// If show_in_rest option has been saved (1 or 0), then set REST API values for post type based on saved options.
+			$option = $this->options["post_type_{$post_type_slug}"];
+			$wp_post_types[ $post_type_slug ]->show_in_rest = $option['show_in_rest'];
+			$wp_post_types[ $post_type_slug ]->rest_base = $option['rest_base'];
+			$wp_post_types[ $post_type_slug ]->rest_controller_class = 'WP_REST_Posts_Controller';
+
+			// Enable REST API support for post meta.
+			if ( isset( $this->options['enable_post_meta'] ) && $this->options['enable_post_meta'] ) {
+				add_filter( "rest_prepare_{$post_type_slug}", array( $this, 'add_rest_api_post_meta' ), 10, 3 );
+			}
+
+		}
+
+	}
+
+	/**
+	 * Add post meta to REST API response.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param stdClass        $response Default API response object.
+	 * @param WP_Post         $post     Current post.
+	 * @param WP_REST_Request $request  Current API request.
+	 *
+	 * @return stdClass $response Updated response request.
+	 */
+	public function add_rest_api_post_meta( $response, $post, $request ) {
+
+		// Get initial response data.
+		$response_data = $response->get_data();
+
+		// Add post meta to response data.
+		$response_data['post_meta'] = get_post_meta( $post->ID );
+
+		// Re-assemble response.
+		$response->set_data( $response_data );
+
+		return $response;
+
 	}
 
 }

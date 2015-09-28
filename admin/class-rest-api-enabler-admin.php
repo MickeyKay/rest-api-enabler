@@ -113,7 +113,7 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 */
-	function add_settings_page() {
+	public function add_settings_page() {
 
 		$this->settings_page = add_options_page(
 			__( 'REST API Enabler', 'rest-api-enabler'), // Page title
@@ -130,7 +130,7 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 */
-	function do_settings_page() {
+	public function do_settings_page() {
 		?>
 		<?php screen_icon();
 		?>
@@ -158,27 +158,67 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 */
-	function add_settings_fields() {
+	public function add_settings_fields() {
+
+		global $wpdb;
 
 		register_setting(
 			$this->plugin_slug, // Option group
 			$this->plugin_slug, // Option name
-			array( $this, 'sanitize_setting' ) // Sanitization
+			array( $this, 'validate_settings' ) // Sanitization
 		);
 
-		// General settings section
+		// Post Types settings section
 		add_settings_section(
-			'general', // Section ID
-			__( 'Post Types', 'ultimate-lightbox' ), // Title
-			null, // Callback
+			'post_types', // Section ID
+			__( 'Post Types', 'rest-api-enabler' ), // Title
+			array( $this, 'do_hr' ), // Callback
 			$this->plugin_slug // Page
 		);
 
-		// Define args for fetching post types.
-		$arg = array(
-
+		// Post Meta settings section
+		add_settings_section(
+			'post_meta', // Section ID
+			__( 'Post Meta', 'rest-api-enabler' ), // Title
+			array( $this, 'do_hr' ), // Callback
+			$this->plugin_slug // Page
 		);
 
+		// Add post meta settings
+
+		$post_meta_objects = $wpdb->get_results( "SELECT DISTINCT meta_key FROM $wpdb->postmeta" );
+		usort( $post_meta_objects, array( $this, 'string_compare' ) );
+
+		$first = true;
+		foreach ( $post_meta_objects as $post_meta_object ) {
+
+			if ( $first ) {
+				$title = __( 'Custom Fields', 'rest-api-enabler' );
+				$first = false;
+			} else {
+				$title = null;
+			}
+
+			$post_meta_key = $post_meta_object->meta_key;
+
+			$id = "post_meta{$post_meta_key}";
+			add_settings_field(
+				$id, // ID
+				$title,
+				array( $this, 'render_checkbox' ), // Callback
+				$this->plugin_slug, // Page
+				'post_meta', // Section
+				array( // Args
+					'id'          => $id,
+					'description' => $post_meta_key,
+				)
+			);
+
+
+		}
+
+
+		// Add post type settings.
 		foreach( get_post_types( null, 'objects' ) as $post_type => $post_type_object ) {
 
 			$id = "post_type_{$post_type}";
@@ -188,7 +228,7 @@ class REST_API_Enabler_Admin {
 				$post_type_object->labels->name,
 				array( $this, 'render_post_type_settings' ), // Callback
 				$this->plugin_slug, // Page
-				'general', // Section
+				'post_types', // Section
 				array( // Args
 					'id'               => $id,
 					'post_type_object' => $post_type_object,
@@ -199,10 +239,17 @@ class REST_API_Enabler_Admin {
 
 	}
 
-	function render_post_type_settings( $args ) {
+	/**
+	 * Render combined inputs for post types settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $args Array of settings args.
+	 */
+	public function render_post_type_settings( $args ) {
 
 		// Do post type checkbox.
-		$args['secondary_id'] = 'enabled';
+		$args['secondary_id'] = 'show_in_rest';
 		$this->render_checkbox( $args );
 
 		// Do post type REST base.
@@ -212,18 +259,18 @@ class REST_API_Enabler_Admin {
 		ob_start();
 		$this->render_text_input( $args );
 		$rest_base_output = ob_get_clean();
-		printf( '&nbsp;&nbsp;&nbsp;<span class="rae-rest-base rae-hidden-opacity">%s: %s</span>', __( 'REST base', 'rest-api-enabler' ), $rest_base_output );
+		printf( '&nbsp;&nbsp;&nbsp;<span class="rae-rest-base rae-hidden-opacity">%s: %s</span>', __( 'REST API base', 'rest-api-enabler' ), $rest_base_output );
 
 	}
 
 	/**
-	 * Checkbox settings field callback.
+	 * Render checkbox input for settings.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param array $args Args from add_settings_field().
 	 */
-	function render_checkbox( $args ) {
+	public function render_checkbox( $args ) {
 
 		// Set up option name and value.
 		if ( isset( $args['secondary_id'] ) ) {
@@ -251,6 +298,13 @@ class REST_API_Enabler_Admin {
 
 		}
 
+		// Render hidden input set to 0 to save unchecked value as non-null.
+		printf(
+            '<input type="hidden" value="0" id="%s" name="%s"/>',
+            $option_name,
+            $option_name
+        );
+
 		printf(
             '<label for="%s"><input type="checkbox" value="1" id="%s" name="%s" %s/> %s</label>',
             $option_name,
@@ -263,13 +317,13 @@ class REST_API_Enabler_Admin {
 	}
 
 	/**
-	 * Text input settings field callback.
+	 * Render text input for settings.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param array $args Args from add_settings_field().
 	 */
-	function render_text_input( $args ) {
+	public function render_text_input( $args ) {
 
 		// Set up option name and value.
 		if ( isset( $args['secondary_id'] ) ) {
@@ -298,18 +352,41 @@ class REST_API_Enabler_Admin {
 		}
 
 		printf(
-            '%s<input type="text" value="%s" id="%s" name="%s" class="regular-text %s"/><br /><p class="description" for="%s">%s</p>',
+            '%s<input type="text" value="%s" id="%s" name="%s" class="regular-text %s"/>%s',
             ! empty( $args['sub_heading'] ) ? '<b>' . $args['sub_heading'] . '</b><br />' : '',
             $value,
             $option_name,
             $option_name,
             ! empty( $args['class'] ) ? $args['class'] : '',
-            $option_name,
-            ! empty( $args['description'] ) ? $args['description'] : ''
+            ! empty( $args['description'] ) ? sprintf( '<br /><p class="description" for="%s">%s</p>',
+            $option_name, $args['description'] ) : ''
         );
 
 	}
 
+	/**
+	 * Output <hr /> tag below settings section titles.
+	 *
+	 * @since 1.0.0
+	 */
+	public function do_hr() {
+		echo '<hr />';
+	}
+
+	public function string_compare( $a, $b ) {
+		return strcmp( strtolower( $a->meta_key ), strtolower( $b->meta_key ) );
+	}
+
+	/**
+	 * Get option name based on primary and secondary id's.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $option_id    Primary option id.
+	 * @param string $secondary_id Secondary option id.
+	 *
+	 * @return string Option name.
+	 */
 	private function get_option_name( $option_id, $secondary_id = '' ) {
 		if ( $secondary_id ) {
 			return sprintf( '%s[%s][%s]', $this->plugin_slug, $option_id, $secondary_id );
@@ -318,6 +395,16 @@ class REST_API_Enabler_Admin {
 		}
 	}
 
+	/**
+	 * Get option value based on primary and secondary id's.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $option_id    Primary option id.
+	 * @param string $secondary_id Secondary option id.
+	 *
+	 * @return mixed Option value.
+	 */
 	private function get_option_value( $option_id, $secondary_id = '' ) {
 
 		if ( $secondary_id ) {
@@ -328,15 +415,18 @@ class REST_API_Enabler_Admin {
 
 	}
 
-	function sanitize_setting( $input ) {
+	/**
+	 * Validate saved settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $input Saved inputs.
+	 *
+	 * @return array Update settings.
+	 */
+	public function validate_settings( $input ) {
 
-		$new_input = array();
-
-		// Save checkboxes as 1's or 0's, not null.
-		foreach ( get_post_types() as $post_type_slug => $post_type_object ) {
-			$new_input["post_type_{$post_type_slug}"]['enabled'] = isset( $input["post_type_{$post_type_slug}"]['enabled'] ) ? $input["post_type_{$post_type_slug}"]['enabled'] : 0;
-			$new_input["post_type_{$post_type_slug}"]['rest_base'] = isset( $input["post_type_{$post_type_slug}"]['rest_base'] ) ? $input["post_type_{$post_type_slug}"]['rest_base'] : '';
-		}
+		$new_input = $input;
 
 		return $new_input;
 
@@ -349,18 +439,6 @@ class REST_API_Enabler_Admin {
 	 */
 	public function enqueue_styles() {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in REST_API_Enabler_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The REST_API_Enabler_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
 		wp_enqueue_style( $this->plugin_slug, plugin_dir_url( __FILE__ ) . 'css/rest-api-enabler-admin.css', array(), $this->version, 'all' );
 
 	}
@@ -371,7 +449,6 @@ class REST_API_Enabler_Admin {
 	 * @since    1.0.0
 	 */
 	public function enqueue_scripts() {
-
 
 		wp_enqueue_script( $this->plugin_slug, plugin_dir_url( __FILE__ ) . 'js/rest-api-enabler-admin.js', array( 'jquery' ), $this->version, false );
 
