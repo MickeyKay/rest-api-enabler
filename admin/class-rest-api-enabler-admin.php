@@ -314,8 +314,6 @@ class REST_API_Enabler_Admin {
 
 		}
 
-		echo '</div>';
-
 	}
 
 	/**
