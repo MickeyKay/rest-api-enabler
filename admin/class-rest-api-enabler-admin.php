@@ -68,28 +68,28 @@ class REST_API_Enabler_Admin {
 	private static $instance = null;
 
 	/**
-     * Plugin options.
-     *
-     * @since  1.0.0
-     *
-     * @var    string
-     */
-    protected $options;
+	 * Plugin options.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @var    string
+	 */
+	protected $options;
 
 	/**
-     * Creates or returns an instance of this class.
-     *
-     * @return    REST_API_Enabler_Admin    A single instance of this class.
-     */
-    public static function get_instance( $plugin ) {
+	 * Creates or returns an instance of this class.
+	 *
+	 * @return    REST_API_Enabler_Admin    A single instance of this class.
+	 */
+	public static function get_instance( $plugin ) {
 
-        if ( null == self::$instance ) {
-            self::$instance = new self( $plugin );
-        }
+		if ( null == self::$instance ) {
+			self::$instance = new self( $plugin );
+		}
 
-        return self::$instance;
+		return self::$instance;
 
-    }
+	}
 
 	/**
 	 * Initialize the class and set its properties.
@@ -116,8 +116,8 @@ class REST_API_Enabler_Admin {
 	public function add_settings_page() {
 
 		$this->settings_page = add_options_page(
-			__( 'REST API Enabler', 'rest-api-enabler'), // Page title
-			__( 'REST API Enabler', 'rest-api-enabler'), // Menu title
+			__( 'REST API Enabler', 'rest-api-enabler' ), // Page title
+			__( 'REST API Enabler', 'rest-api-enabler' ), // Menu title
 			'manage_options', // Capability
 			$this->plugin_slug, // Page ID
 			array( $this, 'do_settings_page' ) // Callback
@@ -131,26 +131,36 @@ class REST_API_Enabler_Admin {
 	 * @since 1.0.0
 	 */
 	public function do_settings_page() {
-		?>
-		<?php screen_icon();
+
+		screen_icon();
 		?>
 		<div class="wrap <?php echo $this->plugin_slug; ?>-settings">
-	        <h2><?php echo $this->plugin_name; ?></h2>
-	        <?php if ( defined( 'REST_API_VERSION' ) ) { ?>
-			<form action='options.php' method='post'>
-				<?php
-				settings_fields( $this->plugin_slug );
-				do_settings_sections( $this->plugin_slug );
-				submit_button();
-				?>
-			</form>
-			<?php
-			} else {
+	        <h1><?php echo $this->plugin_name; ?></h1>
+	        <?php
+
+			if ( ! defined( 'REST_API_VERSION' ) ) {
 				echo '<p>' . sprintf( __( 'You need to install the %sWordPress REST API%s for this plugin to work.' ), '<a href="https://wordpress.org/plugins/rest-api/" target="_blank">', '</a>' ) . '</p>';
+				return;
 			}
+
+			// Set up tab/settings.
+			$tab_base_url = "?page={$this->plugin_slug}";
+			$active_tab = isset( $_GET[ 'tab' ] ) ? $_GET[ 'tab' ] : null;
+
 			?>
+	        <h2 class="nav-tab-wrapper">
+	        	<a href="<?php echo $tab_base_url; ?>&tab=post-types" class="nav-tab <?php echo ( ! $active_tab || $active_tab == 'post-types' ) ? 'nav-tab-active' : ''; ?>"><?php echo __( 'Post Types', 'wp-dev-dashboard ' ); ?></a>
+	        	<a href="<?php echo $tab_base_url; ?>&tab=post-meta" class="nav-tab <?php echo $active_tab == 'post-meta' ? 'nav-tab-active' : ''; ?>"><?php echo __( 'Post Meta', 'wp-dev-dashboard ' ); ?></a>
+	        </h2>
+			<form action='options.php' method='post'>
+				<?php settings_fields( $this->plugin_slug ); ?>
+				<div class="rae-settings-tab rae-post-types-settings <?php echo ( ! $active_tab || $active_tab == 'post-types' ) ? 'active' : ''; ?>"><?php do_settings_sections( "{$this->plugin_slug}-post_types_settings" ); ?></div>
+				<div class="rae-settings-tab rae-post-meta-settings <?php echo ( $active_tab == 'post-meta' ) ? 'active' : ''; ?>"><?php do_settings_sections( "{$this->plugin_slug}-post_types_meta" ); ?></div>
+				<?php submit_button(); ?>
+			</form>
 		</div>
 		<?php
+
 	}
 
 	/**
@@ -159,8 +169,6 @@ class REST_API_Enabler_Admin {
 	 * @since 1.0.0
 	 */
 	public function add_settings_fields() {
-
-		global $wpdb;
 
 		register_setting(
 			$this->plugin_slug, // Option group
@@ -171,55 +179,21 @@ class REST_API_Enabler_Admin {
 		// Post Types settings section
 		add_settings_section(
 			'post_types', // Section ID
-			__( 'Post Types', 'rest-api-enabler' ), // Title
-			array( $this, 'do_hr' ), // Callback
-			$this->plugin_slug // Page
+			null, // Title
+			null, // Callback
+			"{$this->plugin_slug}-post_types_settings" // Page
 		);
 
 		// Post Meta settings section
 		add_settings_section(
 			'post_meta', // Section ID
-			__( 'Post Meta', 'rest-api-enabler' ), // Title
-			array( $this, 'do_hr' ), // Callback
-			$this->plugin_slug // Page
+			null, // Title
+			null, // Callback
+			"{$this->plugin_slug}-post_types_meta" // Page
 		);
 
-		// Add post meta settings
-
-		$post_meta_objects = $wpdb->get_results( "SELECT DISTINCT meta_key FROM $wpdb->postmeta" );
-		usort( $post_meta_objects, array( $this, 'string_compare' ) );
-
-		$first = true;
-		foreach ( $post_meta_objects as $post_meta_object ) {
-
-			if ( $first ) {
-				$title = __( 'Custom Fields', 'rest-api-enabler' );
-				$first = false;
-			} else {
-				$title = null;
-			}
-
-			$post_meta_key = $post_meta_object->meta_key;
-
-			$id = "post_meta{$post_meta_key}";
-			add_settings_field(
-				$id, // ID
-				$title,
-				array( $this, 'render_checkbox' ), // Callback
-				$this->plugin_slug, // Page
-				'post_meta', // Section
-				array( // Args
-					'id'          => $id,
-					'description' => $post_meta_key,
-				)
-			);
-
-
-		}
-
-
 		// Add post type settings.
-		foreach( get_post_types( null, 'objects' ) as $post_type => $post_type_object ) {
+		foreach ( get_post_types( null, 'objects' ) as $post_type => $post_type_object ) {
 
 			$id = "post_type_{$post_type}";
 
@@ -227,7 +201,7 @@ class REST_API_Enabler_Admin {
 				$id, // ID
 				$post_type_object->labels->name,
 				array( $this, 'render_post_type_settings' ), // Callback
-				$this->plugin_slug, // Page
+				"{$this->plugin_slug}-post_types_settings", // Page
 				'post_types', // Section
 				array( // Args
 					'id'               => $id,
@@ -237,6 +211,111 @@ class REST_API_Enabler_Admin {
 
 		}
 
+		// Post Meta select.
+		$id = 'show_post_meta';
+		add_settings_field(
+			$id, // ID
+			__( 'Show Post Meta', 'rest-api-enabler' ),
+			array( $this, 'render_select' ), // Callback
+			"{$this->plugin_slug}-post_types_meta", // Page
+			'post_meta', // Section
+			array( // Args
+				'id'               => $id,
+				'options' => array(
+					null => __( 'None', 'rest-api-enabler' ),
+					'include' => __( 'Include selected', 'rest-api-enabler' ),
+					'exclude' => __( 'Exclude selected', 'rest-api-enabler' ),
+				),
+			)
+		);
+
+		// Post Meta checkboxes.
+		$id = 'post-meta-checkboxes';
+		add_settings_field(
+			$id, // ID
+			null,
+			array( $this, 'do_post_meta_settings' ), // Callback
+			"{$this->plugin_slug}-post_types_meta", // Page
+			'post_meta', // Section
+			array( // Args
+				'id'        => $id,
+			)
+		);
+
+	}
+
+	public function do_post_meta_settings() {
+
+		echo '<div class="rae-post-meta-checkboxes rae-fadeable-display rae-hidden">';
+
+		$this->do_post_meta_check_buttons();
+		$this->do_post_meta_checkboxes();
+		$this->do_post_meta_check_buttons();
+
+		echo '</div>';
+
+	}
+
+	private function do_post_meta_check_buttons() {
+
+		echo '<div class="rae-post-meta-check-buttons">';
+
+		printf( '<a href="#" class="%s">%s %s</a>',
+			'button rae-check-all',
+			'<span class="dashicons dashicons-yes"></span>',
+			__( 'Check all', 'rest-api-enabler' )
+		);
+
+		printf( '<a href="#" class="%s">%s %s</a>',
+			'button rae-uncheck-all',
+			'<span class="dashicons dashicons-no-alt"></span>',
+			__( 'Uncheck all', 'rest-api-enabler' )
+		);
+
+		echo '</div>';
+
+	}
+
+	private function do_post_meta_checkboxes() {
+
+		global $wpdb;
+
+		$post_meta_objects = $wpdb->get_results( "SELECT DISTINCT meta_key FROM $wpdb->postmeta" );
+		usort( $post_meta_objects, array( $this, 'string_compare' ) );
+
+		// Break up post meta into groups for columns.
+		$post_meta_count = count( $post_meta_objects );
+		$post_meta_groups = array_chunk( $post_meta_objects, (int) ceil( $post_meta_count / 2 ) );
+
+		foreach ( $post_meta_groups as $post_meta_objects ) {
+			?>
+			<div class="rae-col-one-half">
+			<?php
+
+			foreach ( $post_meta_objects as $post_meta_object ) {
+
+				$post_meta_key = $post_meta_object->meta_key;
+
+				$args = array(
+					'id'           => 'post_meta_individual',
+					'secondary_id' => $post_meta_key,
+					'description'  => $post_meta_key,
+					'save_null' => true,
+				);
+
+				$this->render_checkbox( $args );
+				echo '<br />';
+
+			}
+
+			?>
+			</div>
+			<?php
+
+		}
+
+		echo '</div>';
+
 	}
 
 	/**
@@ -244,7 +323,7 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $args Array of settings args.
+	 * @param array   $args Array of settings args.
 	 */
 	public function render_post_type_settings( $args ) {
 
@@ -259,7 +338,7 @@ class REST_API_Enabler_Admin {
 		ob_start();
 		$this->render_text_input( $args );
 		$rest_base_output = ob_get_clean();
-		printf( '&nbsp;&nbsp;&nbsp;<span class="rae-rest-base rae-hidden-opacity">%s: %s</span>', __( 'REST API base', 'rest-api-enabler' ), $rest_base_output );
+		printf( '&nbsp;&nbsp;&nbsp;<span class="rae-rest-base rae-fadeable-opacity rae-hidden">%s: %s</span>', __( 'REST API base', 'rest-api-enabler' ), $rest_base_output );
 
 	}
 
@@ -268,7 +347,7 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $args Args from add_settings_field().
+	 * @param array   $args Args from add_settings_field().
 	 */
 	public function render_checkbox( $args ) {
 
@@ -289,7 +368,7 @@ class REST_API_Enabler_Admin {
 			$post_type_object = $args['post_type_object'];
 			$init_rest_base = isset( $post_type_object->rest_base ) ? $post_type_object->rest_base : '';
 
-			// Get
+			// Get checked value based on saved value, or existing value if option doesn't exist.
 			if ( isset( $option_value ) ) {
 				$checked = $option_value;
 			} elseif ( $init_rest_base ) {
@@ -299,20 +378,24 @@ class REST_API_Enabler_Admin {
 		}
 
 		// Render hidden input set to 0 to save unchecked value as non-null.
-		printf(
-            '<input type="hidden" value="0" id="%s" name="%s"/>',
-            $option_name,
-            $option_name
-        );
+		if ( empty( $args['save_null'] ) ) {
+
+			printf(
+				'<input type="hidden" value="0" id="%s" name="%s"/>',
+				$option_name,
+				$option_name
+			);
+
+		}
 
 		printf(
-            '<label for="%s"><input type="checkbox" value="1" id="%s" name="%s" %s/> %s</label>',
-            $option_name,
-            $option_name,
-            $option_name,
-            checked( 1, $checked, false ),
-            ! empty( $args['description'] ) ? $args['description'] : ''
-        );
+			'<label for="%s"><input type="checkbox" value="1" id="%s" name="%s" %s/>&nbsp;%s</label>',
+			$option_name,
+			$option_name,
+			$option_name,
+			checked( 1, $checked, false ),
+			! empty( $args['description'] ) ? '<span class="rae-description">' . $args['description'] . '</span>': ''
+		);
 
 	}
 
@@ -321,7 +404,7 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $args Args from add_settings_field().
+	 * @param array   $args Args from add_settings_field().
 	 */
 	public function render_text_input( $args ) {
 
@@ -352,15 +435,53 @@ class REST_API_Enabler_Admin {
 		}
 
 		printf(
-            '%s<input type="text" value="%s" id="%s" name="%s" class="regular-text %s"/>%s',
-            ! empty( $args['sub_heading'] ) ? '<b>' . $args['sub_heading'] . '</b><br />' : '',
-            $value,
-            $option_name,
-            $option_name,
-            ! empty( $args['class'] ) ? $args['class'] : '',
-            ! empty( $args['description'] ) ? sprintf( '<br /><p class="description" for="%s">%s</p>',
-            $option_name, $args['description'] ) : ''
-        );
+			'%s<input type="text" value="%s" id="%s" name="%s" class="regular-text %s"/>%s',
+			! empty( $args['sub_heading'] ) ? '<b>' . $args['sub_heading'] . '</b><br />' : '',
+			$value,
+			$option_name,
+			$option_name,
+			! empty( $args['class'] ) ? $args['class'] : '',
+			! empty( $args['description'] ) ? sprintf( '<br /><p class="description" for="%s">%s</p>',
+				$option_name, $args['description'] ) : ''
+		);
+
+	}
+
+	public function render_select( $args ) {
+
+		if ( ! isset( $args['options'] ) ) {
+			return;
+		}
+
+		// Set up option name and value.
+		if ( isset( $args['secondary_id'] ) ) {
+			$option_name = $this->get_option_name( $args['id'], $args['secondary_id'] );
+			$option_value = $this->get_option_value( $args['id'], $args['secondary_id'] );
+		} else {
+			$option_name = $this->get_option_name( $args['id'] );
+			$option_value = $this->get_option_value( $args['id'] );
+		}
+
+		printf(
+			'<select id="%s" name="%s" %s"/>',
+			$option_name,
+			$option_name,
+			! empty( $args['class'] ) ? $args['class'] : ''
+		);
+
+		// Output each option.
+		foreach ( $args['options'] as $option_slug => $option_name ) {
+
+			printf(
+				'<option %s value="%s"/>%s</option>',
+				selected( $option_value, $option_slug, false ),
+				$option_slug,
+				$option_name
+			);
+
+		}
+
+		echo '</select>';
 
 	}
 
@@ -382,8 +503,8 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $option_id    Primary option id.
-	 * @param string $secondary_id Secondary option id.
+	 * @param string  $option_id    Primary option id.
+	 * @param string  $secondary_id Secondary option id.
 	 *
 	 * @return string Option name.
 	 */
@@ -400,8 +521,8 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $option_id    Primary option id.
-	 * @param string $secondary_id Secondary option id.
+	 * @param string  $option_id    Primary option id.
+	 * @param string  $secondary_id Secondary option id.
 	 *
 	 * @return mixed Option value.
 	 */
@@ -420,7 +541,7 @@ class REST_API_Enabler_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $input Saved inputs.
+	 * @param array   $input Saved inputs.
 	 *
 	 * @return array Update settings.
 	 */

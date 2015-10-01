@@ -287,26 +287,37 @@ class REST_API_Enabler {
 
 		global $wp_post_types;
 
+		$post_meta_enabled = $this->is_post_meta_enabled();
+
 		// Loop over each post type, register support for the API, and add the response filter.
 		foreach ( $wp_post_types as $post_type_slug => $post_type_object ) {
 
-			// If no option has been explicitly saved for this post type, then skip it and maintain the defaults.
-			if ( ! isset( $this->options["post_type_{$post_type_slug}"]['show_in_rest'] ) ) {
-				continue;
-			}
-
-			// If show_in_rest option has been saved (1 or 0), then set REST API values for post type based on saved options.
-			$option = $this->options["post_type_{$post_type_slug}"];
-			$wp_post_types[ $post_type_slug ]->show_in_rest = $option['show_in_rest'];
-			$wp_post_types[ $post_type_slug ]->rest_base = $option['rest_base'];
-			$wp_post_types[ $post_type_slug ]->rest_controller_class = 'WP_REST_Posts_Controller';
+			// Add REST API support for post types as defined in the plugin settings.
+			$this->add_rest_api_support_for_post_type( $post_type_slug );
 
 			// Enable REST API support for post meta.
-			if ( isset( $this->options['enable_post_meta'] ) && $this->options['enable_post_meta'] ) {
-				add_filter( "rest_prepare_{$post_type_slug}", array( $this, 'add_rest_api_post_meta' ), 10, 3 );
+			if ( $post_meta_enabled ) {
+				add_filter( "rest_prepare_{$post_type_slug}", array( $this, 'add_rest_api_support_for_post_meta' ), 10, 3 );
 			}
 
 		}
+
+	}
+
+	private function add_rest_api_support_for_post_type( $post_type_slug ) {
+
+		global $wp_post_types;
+
+		// If no option has been explicitly saved for this post type, then skip it and maintain the defaults.
+		if ( ! isset( $this->options["post_type_{$post_type_slug}"]['show_in_rest'] ) ) {
+			return;
+		}
+
+		// If show_in_rest option has been saved (1 or 0), then set REST API values for post type based on saved options.
+		$option = $this->options["post_type_{$post_type_slug}"];
+		$wp_post_types[ $post_type_slug ]->show_in_rest = $option['show_in_rest'];
+		$wp_post_types[ $post_type_slug ]->rest_base = $option['rest_base'];
+		$wp_post_types[ $post_type_slug ]->rest_controller_class = 'WP_REST_Posts_Controller';
 
 	}
 
@@ -321,18 +332,55 @@ class REST_API_Enabler {
 	 *
 	 * @return stdClass $response Updated response request.
 	 */
-	public function add_rest_api_post_meta( $response, $post, $request ) {
+	public function add_rest_api_support_for_post_meta( $response, $post, $request ) {
 
 		// Get initial response data.
 		$response_data = $response->get_data();
 
+		// Get post meta based on method for inclusion/exclusion.
+		$post_meta = get_post_custom( $post->ID );
+
+		// Get post meta include/exclude setting.
+		$show_post_meta = isset( $this->options['show_post_meta'] ) ? $this->options['show_post_meta'] : null;
+		$post_meta_checked = isset( $this->options['post_meta_individual'] ) ? $this->options['post_meta_individual'] : null;
+
+		// Get array of post meta based on include/exclude settings.
+		switch ( $show_post_meta ) {
+
+			case 'exclude':
+				$response_post_meta = array_diff_key( $post_meta, $post_meta_checked );
+				break;
+
+			default: // Enabled
+				$response_post_meta = array_intersect_key( $post_meta, $post_meta_checked );
+
+		}
+
 		// Add post meta to response data.
-		$response_data['post_meta'] = get_post_meta( $post->ID );
+		$response_data = array_merge( $response_data, $response_post_meta );
 
 		// Re-assemble response.
 		$response->set_data( $response_data );
 
 		return $response;
+
+	}
+
+	/**
+	 * Check if any post meta is enabled for REST API inclusion.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool Whether or not post meta support is enabled.
+	 */
+	private function is_post_meta_enabled() {
+
+		$show_post_meta = isset( $this->options['show_post_meta'] ) ? $this->options['show_post_meta'] : null;
+		$post_meta_checked = isset( $this->options['post_meta_individual'] ) ? $this->options['post_meta_individual'] : null;
+		$no_post_meta_enabled = ( 'include' === $show_post_meta ) && ! isset( $post_meta_checked );
+		$add_post_meta_support = $show_post_meta && ! $no_post_meta_enabled;
+
+		return $add_post_meta_support;
 
 	}
 
