@@ -76,6 +76,15 @@ class REST_API_Enabler {
 	protected $version;
 
 	/**
+	 * Whether or not to include protected meta in REST API responses.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $version
+	 */
+	protected $include_protected_meta;
+
+	/**
 	 * The instance of this class.
 	 *
 	 * @since    1.0.0
@@ -126,12 +135,16 @@ class REST_API_Enabler {
 		$this->version = '1.0.0';
 		$this->options = get_option( $this->slug );
 
+		$this->set_defaults();
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->define_admin_hooks();
-		//$this->define_public_hooks();
 		$this->define_shared_hooks();
 
+	}
+
+	private function set_defaults() {
+		$this->include_protected_meta = apply_filters( 'rae_include_protected_meta', __return_false() );
 	}
 
 	/**
@@ -218,22 +231,6 @@ class REST_API_Enabler {
 	}
 
 	/**
-	 * Register all of the hooks related to the public-facing functionality
-	 * of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function define_public_hooks() {
-
-		$plugin_public = REST_API_Enabler_Public::get_instance( $this );
-
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-
-	}
-
-	/**
 	 * Register all of the hooks related to both the admin and public-facing
 	 * functionality of the plugin.
 	 *
@@ -276,6 +273,42 @@ class REST_API_Enabler {
 	 */
 	public function get( $property = '' ) {
 		return $this->$property;
+	}
+
+	/**
+	 * Get all available post meta objects from the database.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array Array of post meta objects.
+	 */
+	public function get_post_meta_keys() {
+		global $wpdb;
+
+		$post_meta_objects = $wpdb->get_results( "SELECT DISTINCT meta_key FROM $wpdb->postmeta" );
+
+		$post_meta_keys = array_map(
+			array( $this, 'get_post_meta_key_from_object' ),
+			$post_meta_objects
+		);
+
+		// Omit protected post meta.
+		if ( ! $this->include_protected_meta ) {
+			$post_meta_keys = array_filter( $post_meta_keys, array( $this, 'remove_protected_post_meta_keys' ) );
+		}
+
+		asort( $post_meta_keys );
+
+		return $post_meta_keys;
+
+	}
+
+	public function get_post_meta_key_from_object( $post_meta_object ) {
+		return $post_meta_object->meta_key;
+	}
+
+	public function remove_protected_post_meta_keys( $post_meta_key ) {
+		return strpos( $post_meta_key, '_') !== 0;
 	}
 
 	/**
@@ -337,24 +370,10 @@ class REST_API_Enabler {
 		// Get initial response data.
 		$response_data = $response->get_data();
 
-		// Get post meta based on method for inclusion/exclusion.
+		// Get post meta based on settings.
 		$post_meta = get_post_custom( $post->ID );
-
-		// Get post meta include/exclude setting.
-		$show_post_meta = isset( $this->options['show_post_meta'] ) ? $this->options['show_post_meta'] : null;
-		$post_meta_checked = isset( $this->options['post_meta_individual'] ) ? $this->options['post_meta_individual'] : null;
-
-		// Get array of post meta based on include/exclude settings.
-		switch ( $show_post_meta ) {
-
-			case 'exclude':
-				$response_post_meta = array_diff_key( $post_meta, $post_meta_checked );
-				break;
-
-			default: // Enabled
-				$response_post_meta = array_intersect_key( $post_meta, $post_meta_checked );
-
-		}
+		$post_meta_checked = get_post_meta_checked();
+		$response_post_meta = array_intersect_key( $post_meta, $post_meta_checked );
 
 		// Add post meta to response data.
 		$response_data = array_merge( $response_data, $response_post_meta );
@@ -375,12 +394,15 @@ class REST_API_Enabler {
 	 */
 	private function is_post_meta_enabled() {
 
-		$show_post_meta = isset( $this->options['show_post_meta'] ) ? $this->options['show_post_meta'] : null;
-		$post_meta_checked = isset( $this->options['post_meta_individual'] ) ? $this->options['post_meta_individual'] : null;
-		$no_post_meta_enabled = ( 'include' === $show_post_meta ) && ! isset( $post_meta_checked );
-		$add_post_meta_support = $show_post_meta && ! $no_post_meta_enabled;
+		$post_meta_checked = $this->get_post_meta_checked();
 
-		return $add_post_meta_support;
+		return $post_meta_checked;
+
+	}
+
+	private function get_post_meta_checked() {
+
+		$post_meta_checked = isset( $this->options['post_meta_individual'] ) ? $this->options['post_meta_individual'] : null;
 
 	}
 

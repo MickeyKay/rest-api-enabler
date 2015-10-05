@@ -132,7 +132,6 @@ class REST_API_Enabler_Admin {
 	 */
 	public function do_settings_page() {
 
-		screen_icon();
 		?>
 		<div class="wrap <?php echo $this->plugin_slug; ?>-settings">
 	        <h1><?php echo $this->plugin_name; ?></h1>
@@ -149,13 +148,13 @@ class REST_API_Enabler_Admin {
 
 			?>
 	        <h2 class="nav-tab-wrapper">
-	        	<a href="<?php echo $tab_base_url; ?>&tab=post-types" class="nav-tab <?php echo ( ! $active_tab || $active_tab == 'post-types' ) ? 'nav-tab-active' : ''; ?>"><?php echo __( 'Post Types', 'wp-dev-dashboard ' ); ?></a>
-	        	<a href="<?php echo $tab_base_url; ?>&tab=post-meta" class="nav-tab <?php echo $active_tab == 'post-meta' ? 'nav-tab-active' : ''; ?>"><?php echo __( 'Post Meta', 'wp-dev-dashboard ' ); ?></a>
+	        	<a href="<?php echo $tab_base_url; ?>&tab=post-types" class="nav-tab <?php echo ( ! $active_tab || $active_tab == 'post-types' ) ? 'nav-tab-active' : ''; ?>"><?php echo __( 'Post Types', 'rest-api-enabler' ); ?></a>
+	        	<a href="<?php echo $tab_base_url; ?>&tab=post-meta" class="nav-tab <?php echo $active_tab == 'post-meta' ? 'nav-tab-active' : ''; ?>"><?php echo __( 'Post Meta', 'rest-api-enabler' ); ?></a>
 	        </h2>
 			<form action='options.php' method='post'>
 				<?php settings_fields( $this->plugin_slug ); ?>
-				<div class="rae-settings-tab rae-post-types-settings <?php echo ( ! $active_tab || $active_tab == 'post-types' ) ? 'active' : ''; ?>"><?php do_settings_sections( "{$this->plugin_slug}-post_types_settings" ); ?></div>
-				<div class="rae-settings-tab rae-post-meta-settings <?php echo ( $active_tab == 'post-meta' ) ? 'active' : ''; ?>"><?php do_settings_sections( "{$this->plugin_slug}-post_types_meta" ); ?></div>
+				<div class="rae-settings-tab rae-post-types-settings <?php echo ( ! $active_tab || $active_tab == 'post-types' ) ? 'active' : ''; ?>"><?php $this->do_post_types_settings(); ?></div>
+				<div class="rae-settings-tab rae-post-meta-settings <?php echo ( $active_tab == 'post-meta' ) ? 'active' : ''; ?>"><?php $this->do_post_meta_settings(); ?></div>
 				<?php submit_button(); ?>
 			</form>
 		</div>
@@ -169,6 +168,10 @@ class REST_API_Enabler_Admin {
 	 * @since 1.0.0
 	 */
 	public function add_settings_fields() {
+
+		global $wp_post_types;
+
+		asort( $wp_post_types );
 
 		register_setting(
 			$this->plugin_slug, // Option group
@@ -193,7 +196,7 @@ class REST_API_Enabler_Admin {
 		);
 
 		// Add post type settings.
-		foreach ( get_post_types( null, 'objects' ) as $post_type => $post_type_object ) {
+		foreach ( $wp_post_types as $post_type => $post_type_object ) {
 
 			$id = "post_type_{$post_type}";
 
@@ -211,24 +214,6 @@ class REST_API_Enabler_Admin {
 
 		}
 
-		// Post Meta select.
-		$id = 'show_post_meta';
-		add_settings_field(
-			$id, // ID
-			__( 'Show Post Meta', 'rest-api-enabler' ),
-			array( $this, 'render_select' ), // Callback
-			"{$this->plugin_slug}-post_types_meta", // Page
-			'post_meta', // Section
-			array( // Args
-				'id'               => $id,
-				'options' => array(
-					null => __( 'None', 'rest-api-enabler' ),
-					'include' => __( 'Include selected', 'rest-api-enabler' ),
-					'exclude' => __( 'Exclude selected', 'rest-api-enabler' ),
-				),
-			)
-		);
-
 		// Post Meta checkboxes.
 		$id = 'post-meta-checkboxes';
 		add_settings_field(
@@ -238,19 +223,32 @@ class REST_API_Enabler_Admin {
 			"{$this->plugin_slug}-post_types_meta", // Page
 			'post_meta', // Section
 			array( // Args
-				'id'        => $id,
+				'id' => $id,
 			)
 		);
 
 	}
 
+	public function do_post_types_settings() {
+
+		printf( '<p>%s</p>',
+			__( 'Select which post types to enable, and specify their REST bases.', 'rest-api-enabler' )
+		);
+
+		do_settings_sections( "{$this->plugin_slug}-post_types_settings" );
+
+	}
+
 	public function do_post_meta_settings() {
 
-		echo '<div class="rae-post-meta-checkboxes rae-fadeable-display rae-hidden">';
+		echo '<div class="rae-post-meta-checkboxes">';
+
+		printf( '<p>%s</p>',
+			__( 'Select which post meta to include in REST API response.', 'rest-api-enabler' )
+		);
 
 		$this->do_post_meta_check_buttons();
 		$this->do_post_meta_checkboxes();
-		$this->do_post_meta_check_buttons();
 
 		echo '</div>';
 
@@ -278,23 +276,18 @@ class REST_API_Enabler_Admin {
 
 	private function do_post_meta_checkboxes() {
 
-		global $wpdb;
-
-		$post_meta_objects = $wpdb->get_results( "SELECT DISTINCT meta_key FROM $wpdb->postmeta" );
-		usort( $post_meta_objects, array( $this, 'string_compare' ) );
+		$post_meta_keys = $this->plugin->get_post_meta_keys();
 
 		// Break up post meta into groups for columns.
-		$post_meta_count = count( $post_meta_objects );
-		$post_meta_groups = array_chunk( $post_meta_objects, (int) ceil( $post_meta_count / 2 ) );
+		$post_meta_count = count( $post_meta_keys );
+		$post_meta_groups = array_chunk( $post_meta_keys, (int) ceil( $post_meta_count / 3 ) );
 
-		foreach ( $post_meta_groups as $post_meta_objects ) {
+		foreach ( $post_meta_groups as $post_meta_keys ) {
 			?>
-			<div class="rae-col-one-half">
+			<div class="rae-col">
 			<?php
 
-			foreach ( $post_meta_objects as $post_meta_object ) {
-
-				$post_meta_key = $post_meta_object->meta_key;
+			foreach ( $post_meta_keys as $post_meta_key ) {
 
 				$args = array(
 					'id'           => 'post_meta_individual',
@@ -336,7 +329,7 @@ class REST_API_Enabler_Admin {
 		ob_start();
 		$this->render_text_input( $args );
 		$rest_base_output = ob_get_clean();
-		printf( '&nbsp;&nbsp;&nbsp;<span class="rae-rest-base rae-fadeable-opacity rae-hidden">%s: %s</span>', __( 'REST API base', 'rest-api-enabler' ), $rest_base_output );
+		printf( '&nbsp;&nbsp;&nbsp;<span class="rae-rest-base rae-fadeable-opacity rae-hidden">%s%s</span>', rest_url(), $rest_base_output );
 
 	}
 

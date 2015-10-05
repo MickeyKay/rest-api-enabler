@@ -12,6 +12,23 @@
 	display: block;
 }
 
+.rae-settings-tab label {
+	white-space: nowrap;
+}
+
+.rae-description {
+	white-space: normal;
+	overflow-wrap: break-word;
+    word-wrap: break-word;
+    -ms-word-break: break-all;
+    word-break: break-all;
+    word-break: break-word;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}
+
 /* Fade In/Out and Visibility */
 .rae-fadeable-display,
 .rae-fadeable-opacity {
@@ -58,28 +75,16 @@
 	line-height: inherit;
 }
 
-.rae-settings-tab label {
-	white-space: nowrap;
-}
-
-.rae-description {
-	white-space: normal;
-	overflow-wrap: break-word;
-    word-wrap: break-word;
-    -ms-word-break: break-all;
-    word-break: break-all;
-    word-break: break-word;
-    -ms-hyphens: auto;
-    -moz-hyphens: auto;
-    -webkit-hyphens: auto;
-    hyphens: auto;
+.rae-post-meta-checkboxes {
+	overflow: hidden;
+	margin-bottom: 1em;
 }
 
 @media ( min-width: 768px ) {
 
-	.rae-col-one-half {
+	.rae-col {
 		float: left;
-		width: 50%;
+		width: 33%;
 		padding-right: 1em;
 		-webkit-box-sizing: border-box;
 		   -moz-box-sizing: border-box;
