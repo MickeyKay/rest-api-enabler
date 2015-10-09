@@ -283,6 +283,7 @@ class REST_API_Enabler {
 	 * @return array Array of post meta objects.
 	 */
 	public function get_post_meta_keys() {
+
 		global $wpdb;
 
 		$post_meta_objects = $wpdb->get_results( "SELECT DISTINCT meta_key FROM $wpdb->postmeta" );
@@ -303,10 +304,41 @@ class REST_API_Enabler {
 
 	}
 
+	/**
+	 * Check whether there are post meta keys in the database to apply settings to.
+	 *
+	 * Note: this is affect by the include_protected_meta filter.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool true if post meta exists for settings.
+	 */
+	public function post_meta_exists_to_enable() {
+		return ( count( $this->get_post_meta_keys() ) > 0 );
+	}
+
+	/**
+	 * Get post meta key from post meta object.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param stdClass $post_meta_object Post meta object.
+	 *
+	 * @return string Post meta key.
+	 */
 	public function get_post_meta_key_from_object( $post_meta_object ) {
 		return $post_meta_object->meta_key;
 	}
 
+	/**
+	 * Filter to remove protected (_*) post meta from array.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $post_meta_key Post meta key.
+	 *
+	 * @return bool True if post meta key does not begin with _.
+	 */
 	public function remove_protected_post_meta_keys( $post_meta_key ) {
 		return strpos( $post_meta_key, '_') !== 0;
 	}
@@ -337,6 +369,13 @@ class REST_API_Enabler {
 
 	}
 
+	/**
+	 * Add REST API support for specific post type.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $post_type_slug Post type slug.
+	 */
 	private function add_rest_api_support_for_post_type( $post_type_slug ) {
 
 		global $wp_post_types;
@@ -392,18 +431,20 @@ class REST_API_Enabler {
 	 *
 	 * @return bool Whether or not post meta support is enabled.
 	 */
-	private function is_post_meta_enabled() {
-
+	public function is_post_meta_enabled() {
 		$post_meta_checked = $this->get_post_meta_checked();
-
 		return $post_meta_checked;
-
 	}
 
-	private function get_post_meta_checked() {
-
-		$post_meta_checked = isset( $this->options['post_meta_individual'] ) ? $this->options['post_meta_individual'] : null;
-
+	/**
+	 * Get the nested array of post meta settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array Array|null of individual post meta settings, or false if none are checked.
+	 */
+	public function get_post_meta_checked() {
+		return isset( $this->options['post_meta_individual'] ) ? $this->options['post_meta_individual'] : null;
 	}
 
 }

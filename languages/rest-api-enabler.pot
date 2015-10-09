@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: REST API Enabler 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/rest-api-enabler\n"
-"POT-Creation-Date: 2015-10-02 20:11:06+00:00\n"
+"POT-Creation-Date: 2015-10-09 03:14:23+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -18,51 +18,30 @@ msgid "REST API Enabler"
 msgstr ""
 
 #: admin/class-rest-api-enabler-admin.php:141
-#: svn/rest-api-enabler/admin/class-rest-api-enabler-admin.php:141
-#: svn/tags/1.0.0/admin/class-rest-api-enabler-admin.php:141
-#: svn/trunk/admin/class-rest-api-enabler-admin.php:141
 msgid "You need to install the %sWordPress REST API%s for this plugin to work."
 msgstr ""
 
 #: admin/class-rest-api-enabler-admin.php:151
-#: svn/rest-api-enabler/admin/class-rest-api-enabler-admin.php:151
-#: svn/tags/1.0.0/admin/class-rest-api-enabler-admin.php:151
-#: svn/trunk/admin/class-rest-api-enabler-admin.php:151
 msgid "Post Types"
 msgstr ""
 
 #: admin/class-rest-api-enabler-admin.php:152
-#: svn/rest-api-enabler/admin/class-rest-api-enabler-admin.php:152
-#: svn/tags/1.0.0/admin/class-rest-api-enabler-admin.php:152
-#: svn/trunk/admin/class-rest-api-enabler-admin.php:152
 msgid "Post Meta"
 msgstr ""
 
 #: admin/class-rest-api-enabler-admin.php:235
-#: svn/rest-api-enabler/admin/class-rest-api-enabler-admin.php:235
-#: svn/tags/1.0.0/admin/class-rest-api-enabler-admin.php:235
-#: svn/trunk/admin/class-rest-api-enabler-admin.php:235
 msgid "Select which post types to enable, and specify their REST bases."
 msgstr ""
 
 #: admin/class-rest-api-enabler-admin.php:247
-#: svn/rest-api-enabler/admin/class-rest-api-enabler-admin.php:247
-#: svn/tags/1.0.0/admin/class-rest-api-enabler-admin.php:247
-#: svn/trunk/admin/class-rest-api-enabler-admin.php:247
 msgid "Select which post meta to include in REST API response."
 msgstr ""
 
 #: admin/class-rest-api-enabler-admin.php:264
-#: svn/rest-api-enabler/admin/class-rest-api-enabler-admin.php:264
-#: svn/tags/1.0.0/admin/class-rest-api-enabler-admin.php:264
-#: svn/trunk/admin/class-rest-api-enabler-admin.php:264
 msgid "Check all"
 msgstr ""
 
 #: admin/class-rest-api-enabler-admin.php:270
-#: svn/rest-api-enabler/admin/class-rest-api-enabler-admin.php:270
-#: svn/tags/1.0.0/admin/class-rest-api-enabler-admin.php:270
-#: svn/trunk/admin/class-rest-api-enabler-admin.php:270
 msgid "Uncheck all"
 msgstr ""
 

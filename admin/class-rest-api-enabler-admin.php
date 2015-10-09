@@ -229,6 +229,13 @@ class REST_API_Enabler_Admin {
 
 	}
 
+	/**
+	 * Output post types setting.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string HTML for entire post types settings.
+	 */
 	public function do_post_types_settings() {
 
 		printf( '<p>%s</p>',
@@ -239,21 +246,43 @@ class REST_API_Enabler_Admin {
 
 	}
 
+	/**
+	 * Output post meta settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string HTML for entire post meta settings.
+	 */
 	public function do_post_meta_settings() {
 
 		echo '<div class="rae-post-meta-checkboxes">';
 
-		printf( '<p>%s</p>',
-			__( 'Select which post meta to include in REST API response.', 'rest-api-enabler' )
-		);
+		if ( $this->plugin->post_meta_exists_to_enable() ) {
 
-		$this->do_post_meta_check_buttons();
-		$this->do_post_meta_checkboxes();
+			printf( '<p>%s</p>',
+				__( 'Select which post meta to include in REST API response.', 'rest-api-enabler' )
+			);
+
+			$this->do_post_meta_check_buttons();
+			$this->do_post_meta_checkboxes();
+
+		} else {
+			printf( '<p>%s</p>',
+				__( 'There is no unprotected post meta to enable.', 'rest-api-enabler' )
+			);
+		}
 
 		echo '</div>';
 
 	}
 
+	/**
+	 * Output post meta 'check/uncheck all' buttons.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string HTML for post meta buttons.
+	 */
 	private function do_post_meta_check_buttons() {
 
 		echo '<div class="rae-post-meta-check-buttons">';
@@ -274,11 +303,17 @@ class REST_API_Enabler_Admin {
 
 	}
 
+	/**
+	 * Output post meta checkboxes in columns.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string HTML output for post meta checkboxes.
+	 */
 	private function do_post_meta_checkboxes() {
 
-		$post_meta_keys = $this->plugin->get_post_meta_keys();
-
 		// Break up post meta into groups for columns.
+		$post_meta_keys = $this->plugin->get_post_meta_keys();
 		$post_meta_count = count( $post_meta_keys );
 		$post_meta_groups = array_chunk( $post_meta_keys, (int) ceil( $post_meta_count / 3 ) );
 
@@ -329,7 +364,7 @@ class REST_API_Enabler_Admin {
 		ob_start();
 		$this->render_text_input( $args );
 		$rest_base_output = ob_get_clean();
-		printf( '&nbsp;&nbsp;&nbsp;<span class="rae-rest-base rae-fadeable-opacity rae-hidden">%s%s</span>', rest_url(), $rest_base_output );
+		printf( '&nbsp;&nbsp;&nbsp;<span class="description rae-rest-base rae-fadeable-opacity rae-hidden">%s%s</span>', rest_url( '/wp/v2/' ), $rest_base_output );
 
 	}
 
@@ -438,6 +473,13 @@ class REST_API_Enabler_Admin {
 
 	}
 
+	/**
+	 * Render select input for settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $args Args from add_settings_field().
+	 */
 	public function render_select( $args ) {
 
 		if ( ! isset( $args['options'] ) ) {
