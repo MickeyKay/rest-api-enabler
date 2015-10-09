@@ -29,9 +29,9 @@ The plugin is compatible with v2+ of the WordPress Rest API.
 
 **NOTE:** by default, the plugin does not display settings for protected post meta (post meta that begins with an underscore and is intended for internal use only). If you wish to include protected post meta in the plugin settings, you can use the `rae_include_protected_meta` filter to do so. The following code can be placed in your theme's `functions.php` file, or in a custom plugin (on `init` priority 10 or earlier):
 
-```
-add_filter( 'rae_include_protected_meta', '__return_true' );
-```
+
+	add_filter( 'rae_include_protected_meta', '__return_true' );
+
 
 
 ## Installation ##
