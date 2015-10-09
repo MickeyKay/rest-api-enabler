@@ -135,16 +135,11 @@ class REST_API_Enabler {
 		$this->version = '1.0.0';
 		$this->options = get_option( $this->slug );
 
-		$this->set_defaults();
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_shared_hooks();
 
-	}
-
-	private function set_defaults() {
-		$this->include_protected_meta = apply_filters( 'rae_include_protected_meta', __return_false() );
 	}
 
 	/**
@@ -241,9 +236,21 @@ class REST_API_Enabler {
 
 		$plugin_shared = $this;
 
-		// Enable REST API support for post types.
+		// Set default values.
+		$this->loader->add_action( 'init', $plugin_shared, 'set_defaults', 15 );
+
+		// Enable REST API support for post types (on 15 to allow plugins/themes to hook up CPT's on default priority 10).
 		$this->loader->add_action( 'init', $plugin_shared, 'add_rest_api_support', 15 );
 
+	}
+
+	/**
+	 * Set plugin defaults at run time.
+	 *
+	 * @since 1.0.0
+	 */
+	public function set_defaults() {
+		$this->include_protected_meta = apply_filters( 'rae_include_protected_meta', __return_false() );
 	}
 
 	/**

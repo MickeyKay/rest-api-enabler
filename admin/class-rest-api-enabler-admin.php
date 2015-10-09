@@ -131,7 +131,6 @@ class REST_API_Enabler_Admin {
 	 * @since 1.0.0
 	 */
 	public function do_settings_page() {
-
 		?>
 		<div class="wrap <?php echo $this->plugin_slug; ?>-settings">
 	        <h1><?php echo $this->plugin_name; ?></h1>
