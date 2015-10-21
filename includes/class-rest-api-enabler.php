@@ -132,7 +132,7 @@ class REST_API_Enabler {
 
 		$this->slug = 'rest-api-enabler';
 		$this->name = __( 'REST API Enabler', 'rest-api-enabler' );
-		$this->version = '1.0.0';
+		$this->version = '1.0.1';
 		$this->options = get_option( $this->slug );
 
 		$this->load_dependencies();
@@ -418,7 +418,7 @@ class REST_API_Enabler {
 
 		// Get post meta based on settings.
 		$post_meta = get_post_custom( $post->ID );
-		$post_meta_checked = get_post_meta_checked();
+		$post_meta_checked = $this->get_post_meta_checked();
 		$response_post_meta = array_intersect_key( $post_meta, $post_meta_checked );
 
 		// Add post meta to response data.

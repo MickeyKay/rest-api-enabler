@@ -4,7 +4,7 @@
 **Tags:**              REST, API, custom, post, type, field, meta, taxonomy, category  
 **Requires at least:** 3.5  
 **Tested up to:**      4.4  
-**Stable tag:**        1.0.0  
+**Stable tag:**        1.0.1  
 **License:**           GPLv2 or later  
 **License URI:**       http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -51,10 +51,18 @@ The plugin is compatible with v2+ of the WordPress Rest API.
 
 ## Changelog ##
 
+### 1.0.1 ###
+* Fix typo preventing post meta enabling.
+* Fix post meta alphabetical sorting.
+
 ### 1.0.0 ###
 * First release
 
 ## Upgrade Notice ##
+
+### 1.0.1 ###
+* Fix typo preventing post meta enabling.
+* Fix post meta alphabetical sorting.
 
 ### 1.0.0 ###
 First Release

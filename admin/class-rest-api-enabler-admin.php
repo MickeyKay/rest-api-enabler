@@ -170,7 +170,7 @@ class REST_API_Enabler_Admin {
 
 		global $wp_post_types;
 
-		asort( $wp_post_types );
+		ksort( $wp_post_types );
 
 		register_setting(
 			$this->plugin_slug, // Option group

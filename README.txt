@@ -4,7 +4,7 @@ Donate link:       http://wordpress.org/plugins/rest-api-enabler
 Tags:              REST, API, custom, post, type, field, meta, taxonomy, category
 Requires at least: 3.5
 Tested up to:      4.4
-Stable tag:        1.0.0
+Stable tag:        1.0.1
 License:           GPLv2 or later
 License URI:       http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -49,10 +49,18 @@ add_filter( 'rae_include_protected_meta', '__return_true' );
 
 == Changelog ==
 
+= 1.0.1 =
+* Fix typo preventing post meta enabling.
+* Fix post meta alphabetical sorting.
+
 = 1.0.0 =
 * First release
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+* Fix typo preventing post meta enabling.
+* Fix post meta alphabetical sorting.
 
 = 1.0.0 =
 First Release
