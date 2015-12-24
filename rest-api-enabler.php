@@ -15,8 +15,8 @@
  * @wordpress-plugin
  * Plugin Name:       REST API Enabler
  * Plugin URI:        http://wordpress.org/plugins/rest-api-enabler
- * Description:       Enable REST API endpoints for custom post types, custom fields, and taxonomies.
- * Version:           1.0.1
+ * Description:       Enable the WP REST API to work with custom post types, custom fields, and custom endpoints.
+ * Version:           1.0.2
  * Author:            Mickey Kay Creative
  * Author URI:        http://mickeykaycreative.com/
  * License:           GPL-2.0+

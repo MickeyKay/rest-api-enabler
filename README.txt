@@ -4,11 +4,11 @@ Donate link:       http://wordpress.org/plugins/rest-api-enabler
 Tags:              REST, API, custom, post, type, field, meta, taxonomy, category
 Requires at least: 3.5
 Tested up to:      4.4
-Stable tag:        1.0.1
+Stable tag:        1.0.2
 License:           GPLv2 or later
 License URI:       http://www.gnu.org/licenses/gpl-2.0.html
 
-Enable the REST API for custom post types and custom fields.
+Enable the WP REST API to work with custom post types, custom fields, and custom endpoints.
 
 == Description ==
 
@@ -16,10 +16,10 @@ Enable the REST API for custom post types and custom fields.
 
 By default, custom post types and custom fields are not accessible via the WordPress REST API. REST API Enabler allows you to:
 
-1. Choose which custom post types to enable, and specify their REST API endpoint.
-2. Choose which custom fields to include in API responses for posts, pages, and custom post types.
+1. Enable the WP REST API for custom post types and specify WP REST API custom endpoints.
+2. Choose which custom fields to include in WP REST API responses for posts, pages, and custom post types.
 
-The plugin is compatible with v2+ of the WordPress Rest API.
+The plugin is compatible with WordPress Rest API, which is now included in WordPress core (version 4.4+)!
 
 = Usage =
 
@@ -49,6 +49,9 @@ add_filter( 'rae_include_protected_meta', '__return_true' );
 
 == Changelog ==
 
+= 1.0.2 =
+* Fix issue in which media uploads via the REST API don't work.
+
 = 1.0.1 =
 * Fix typo preventing post meta enabling.
 * Fix post meta alphabetical sorting.
@@ -57,6 +60,9 @@ add_filter( 'rae_include_protected_meta', '__return_true' );
 * First release
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+* Fix issue in which media uploads via the REST API don't work.
 
 = 1.0.1 =
 * Fix typo preventing post meta enabling.

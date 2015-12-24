@@ -132,7 +132,7 @@ class REST_API_Enabler {
 
 		$this->slug = 'rest-api-enabler';
 		$this->name = __( 'REST API Enabler', 'rest-api-enabler' );
-		$this->version = '1.0.1';
+		$this->version = '1.0.2';
 		$this->options = get_option( $this->slug );
 
 		$this->load_dependencies();
