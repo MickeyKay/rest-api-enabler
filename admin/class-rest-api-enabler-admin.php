@@ -201,7 +201,7 @@ class REST_API_Enabler_Admin {
 
 			add_settings_field(
 				$id, // ID
-				$post_type_object->labels->name,
+				$post_type_object->labels->name . '<br/><small>(' . $post_type_object->name . ')</small>',
 				array( $this, 'render_post_type_settings' ), // Callback
 				"{$this->plugin_slug}-post_types_settings", // Page
 				'post_types', // Section
@@ -452,7 +452,7 @@ class REST_API_Enabler_Admin {
 
 			// Auto-generate initial rest_base if not already set.
 			if ( ! $rest_base ) {
-				$rest_base = sanitize_title_with_dashes( $args['post_type_object']->labels->name );
+				$rest_base = str_replace( '_', '-', $args['post_type_object']->name );
 			}
 
 			$value = $rest_base;
