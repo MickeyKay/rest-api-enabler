@@ -417,11 +417,27 @@ class REST_API_Enabler {
 
 		// Get post meta based on settings.
 		$post_meta = get_post_custom( $post->ID );
+
 		$post_meta_checked = $this->get_post_meta_checked();
+
+		// 1. Get post meta v1 (deprecated.)
 		$response_post_meta = array_intersect_key( $post_meta, $post_meta_checked );
 
 		// Add post meta to response data.
 		$response_data = array_merge( $response_data, $response_post_meta );
+
+		// 2. Get post meta v2 - map all single array values to unkeyed array.
+		$response_post_meta_v2 = array();
+		foreach( $response_post_meta as $key => $value ) {
+
+			if ( count( $value ) > 1 ) {
+				$response_post_meta_v2[ $key ] = $value;
+			} else {
+				$response_post_meta_v2[ $key ] = $value[0];
+			}
+		}
+
+		$response_data[ 'rest_api_enabler' ] = $response_post_meta_v2;
 
 		// Re-assemble response.
 		$response->set_data( $response_data );
