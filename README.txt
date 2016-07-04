@@ -46,8 +46,6 @@ All enabled custom field data is included in the REST API response, nested under
 
 Note: prior to verion 1.1.0, all meta keys were included as top-level keys in the API response. Additionally, all values were returned as arrays, regardless of whether the original value was actually an array. This functionality is now deprecated as it risks key-name collisions. Please reference the `rest_api_enabler` top-level key instead.
 
-The plugin is compatible with WordPress Rest API, which is now included in WordPress core (version 4.4+)!
-
 = Usage =
 
 1. Activate the plugin, then go to **Settings &rarr; REST API Enabler** in the admin.
