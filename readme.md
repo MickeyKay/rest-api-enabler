@@ -21,28 +21,28 @@ By default, custom post types and custom fields are not accessible via the WordP
 
 All enabled custom field data is included in the REST API response, nested under the `rest_api_enabler` key, like so:
 
-```
-[
-  {
-    "id": 179,
-    "date": "2016-07-03T18:06:50",
-    "title": {
-      "rendered": "Test Job"
-    },
-    .
-    .
-    .
-    "rest_api_enabler": {
-      "custom_meta_1": "Value 1",
-      "custom_meta_2": "Value 2",
-      "custom_meta_3": [
-        "Array value 1",
-        "Array value 2"
-      ]
-    }
-  }
-]
-```
+
+	[
+	  {
+	    "id": 179,
+	    "date": "2016-07-03T18:06:50",
+	    "title": {
+	      "rendered": "Test Job"
+	    },
+	    .
+	    .
+	    .
+	    "rest_api_enabler": {
+	      "custom_meta_1": "Value 1",
+	      "custom_meta_2": "Value 2",
+	      "custom_meta_3": [
+	        "Array value 1",
+	        "Array value 2"
+	      ]
+	    }
+	  }
+	]
+
 
 Note: prior to verion 1.1.0, all meta keys were included as top-level keys in the API response. Additionally, all values were returned as arrays, regardless of whether the original value was actually an array. This functionality is now deprecated as it risks key-name collisions. Please reference the `rest_api_enabler` top-level key instead.
 
