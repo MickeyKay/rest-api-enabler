@@ -1,10 +1,10 @@
 # REST API Enabler #
-**Contributors:**      McGuive7  
+**Contributors:** [McGuive7](https://profiles.wordpress.org/McGuive7)  
 **Donate link:**       http://wordpress.org/plugins/rest-api-enabler  
 **Tags:**              REST, API, custom, post, type, field, meta, taxonomy, category  
 **Requires at least:** 3.5  
 **Tested up to:**      4.4  
-**Stable tag:**        1.0.2  
+**Stable tag:**        1.1.0  
 **License:**           GPLv2 or later  
 **License URI:**       http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -18,6 +18,10 @@ By default, custom post types and custom fields are not accessible via the WordP
 
 1. Enable the WP REST API for custom post types and specify WP REST API custom endpoints.
 2. Choose which custom fields to include in WP REST API responses for posts, pages, and custom post types.
+
+All enabled custom field data is included in the REST API response, nested under the `rest_api_enabler` key.
+
+Note: prior to verion 1.1.0, all meta keys were included as top-level keys in the API response. Additionally, all values were returned as arrays, regardless of whether the original value was actually an array. This functionality is now deprecated as it risks key-name collisions. Please reference the `rest_api_enabler` top-level key instead.
 
 The plugin is compatible with WordPress Rest API, which is now included in WordPress core (version 4.4+)!
 
@@ -44,12 +48,14 @@ The plugin is compatible with WordPress Rest API, which is now included in WordP
 
 ## Screenshots ##
 
-### 1. Enabling post types and customizing their endpoints. ###
-![Enabling post types and customizing their endpoints.]()
-
+1. Enabling post types and customizing their endpoints.
 
 
 ## Changelog ##
+
+### 1.1.0 ###
+* Add mapping of meta keys to be nested under the new top level rest_api_enabler response key. Note: top-level key support is still maintained, though now considered deprecated.
+* Add functionality to support singular and array values, to prevent issue in which ALL values were previously returned as arrays.
 
 ### 1.0.2 ###
 * Fix issue in which media uploads via the REST API don't work.
@@ -62,6 +68,10 @@ The plugin is compatible with WordPress Rest API, which is now included in WordP
 * First release
 
 ## Upgrade Notice ##
+
+### 1.1.0 ###
+* Add mapping of Rest API Enabler meta keys to be nested under the new top level rest_api_enabler response key. Note: top-level key support is still maintained, though now considered deprecated.
+* Add functionality to support singular and array values, to prevent issue in which ALL values were previously returned as arrays.
 
 ### 1.0.2 ###
 * Fix issue in which media uploads via the REST API don't work.
